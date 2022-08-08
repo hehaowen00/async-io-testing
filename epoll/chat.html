@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket client</title>
+</head>
+
+<body>
+  <input type="text" id="username" placeholder="username" />
+  <input type="text" id="message" placeholder="message" />
+  <button onclick="sendMessage()">send</button>
+
+  <div id="result"></div>
+  <script language="JavaScript">
+    let client = new WebSocket("ws://localhost:8080/chat");
+
+    function sendMessage() {
+      let username = document.querySelector("#username").value;
+      let message = document.querySelector("#message").value;
+      let timestamp = new Date().toLocaleString();
+      client.send(JSON.stringify({timestamp, username, message}));
+      document.querySelector("#message").value = "";
+    }
+
+    function displayMessage(data) {
+      const {username, message} = data;
+      let timestamp = '[' + data.timestamp + '] ';
+      let p = document.createElement("p");
+      p.innerText = `${timestamp} ${username} says: ${message}`;
+
+      let result = document.getElementById('result');
+      result.appendChild(p);
+    }
+
+    function logEvent(message) {
+      let timestamp = '[' + new Date().toLocaleString() + '] ';
+      let p = document.createElement("p");
+      p.innerText = `${timestamp} ${message}`;
+
+      let result = document.getElementById('result');
+      result.appendChild(p);
+    }
+
+    client.onopen = function (evt) {
+      logEvent('connected');
+    };
+
+    client.onclose = function (evt) {
+      logEvent('disconnected');
+    };
+
+    client.onmessage = function (evt) {
+      let data = JSON.parse(evt.data);
+      displayMessage({...data});
+    };
+
+    client.onerror = function (evt) {
+      logEvent("error: ", evt);
+    };
+  </script>
+</body>
+
+</html>
